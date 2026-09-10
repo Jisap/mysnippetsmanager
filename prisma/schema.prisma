@@ -15,12 +15,14 @@ model Snippet {
     description String?
     code        String
     language    String
+    isFavorite  Boolean  @default(false)
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
     tags Tag[]
 
     @@index([slug])
+    @@index([isFavorite])
 }
 
 model Tag {

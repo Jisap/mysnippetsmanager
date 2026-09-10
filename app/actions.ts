@@ -148,6 +148,75 @@ export async function deleteSnippet(id: string) {
   }
 }
 
+export async function toggleFavoriteSnippet(id: string) {
+  try {
+    const existing = await (prisma.snippet as any).findUnique({
+      where: { id },
+      select: { id: true, isFavorite: true, slug: true },
+    })
+
+    if (!existing) {
+      return { success: false, error: 'Snippet no encontrado' }
+    }
+
+    const updated = await (prisma.snippet as any).update({
+      where: { id },
+      data: { isFavorite: !existing.isFavorite },
+    })
+
+    revalidatePath('/')
+    revalidatePath('/snippets')
+    revalidatePath(`/snippets/${existing.slug}`)
+
+    return { success: true, isFavorite: Boolean(updated.isFavorite) }
+  } catch (error) {
+    console.error('Error toggling favorite:', error)
+    return { success: false, error: 'No se pudo actualizar favorito' }
+  }
+}
+
+export async function duplicateSnippet(id: string) {
+  try {
+    const original = await prisma.snippet.findUnique({
+      where: { id },
+      include: { tags: true },
+    })
+
+    if (!original) {
+      return { success: false, error: 'Snippet no encontrado' }
+    }
+
+    const title = `${original.title} (Copia)`
+    let slug = slugify(title)
+    const existing = await prisma.snippet.findUnique({ where: { slug } })
+    if (existing) {
+      slug = `${slug}-${Date.now().toString(36)}`
+    }
+
+    const duplicate = await (prisma.snippet as any).create({
+      data: {
+        title,
+        slug,
+        description: original.description,
+        code: original.code,
+        language: original.language,
+        isFavorite: false,
+        tags: {
+          connect: original.tags.map((t: any) => ({ id: t.id })),
+        },
+      },
+    })
+
+    revalidatePath('/')
+    revalidatePath('/snippets')
+
+    return { success: true, slug: duplicate.slug }
+  } catch (error) {
+    console.error('Error duplicating snippet:', error)
+    return { success: false, error: 'No se pudo duplicar el snippet' }
+  }
+}
+
 export async function getHighlightedCodeAction(code: string, lang: string, theme: string = 'github-dark') {
   const { highlightCode } = await import('@/lib/shiki')
   return highlightCode(code, lang, theme)
