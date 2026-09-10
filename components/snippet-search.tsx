@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Fuse from 'fuse.js'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, X, Star, Filter, Sparkles, Tag as TagIcon } from 'lucide-react'
+import { Search, X, Star, Filter, Sparkles, Tag as TagIcon, LayoutGrid, Table2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { SnippetsGrid } from './snippets-card'
+import { SnippetTableView } from './snippet-table-view'
 
 interface SnippetSearchProps {
   initialSnippets: any[]
@@ -19,6 +20,19 @@ export function SnippetSearch({ initialSnippets }: SnippetSearchProps) {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [onlyFavorites, setOnlyFavorites] = useState<boolean>(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('snippet_view_mode') as 'grid' | 'table' | null
+    if (saved === 'grid' || saved === 'table') {
+      setViewMode(saved)
+    }
+  }, [])
+
+  const handleViewModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode)
+    localStorage.setItem('snippet_view_mode', mode)
+  }
 
   // Extraer todos los lenguajes únicos presentes en los snippets
   const availableLanguages = useMemo(() => {
@@ -121,31 +135,61 @@ export function SnippetSearch({ initialSnippets }: SnippetSearchProps) {
           )}
         </div>
 
-        {/* Toggle Todos vs Favoritos */}
-        <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/50 shrink-0">
-          <button
-            type="button"
-            onClick={() => setOnlyFavorites(false)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              !onlyFavorites
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Todos ({snippets.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setOnlyFavorites(true)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              onlyFavorites
-                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-sm font-semibold'
-                : 'text-muted-foreground hover:text-amber-400'
-            }`}
-          >
-            <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-amber-400 text-amber-400' : ''}`} />
-            <span>Favoritos ({favoritesCount})</span>
-          </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Toggle Todos vs Favoritos */}
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/50">
+            <button
+              type="button"
+              onClick={() => setOnlyFavorites(false)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                !onlyFavorites
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Todos ({snippets.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setOnlyFavorites(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                onlyFavorites
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-sm font-semibold'
+                  : 'text-muted-foreground hover:text-amber-400'
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-amber-400 text-amber-400' : ''}`} />
+              <span>Favoritos ({favoritesCount})</span>
+            </button>
+          </div>
+
+          {/* Toggle Vista: Grid vs Tabla (Excel) */}
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/50">
+            <button
+              type="button"
+              title="Vista en Tarjetas"
+              onClick={() => handleViewModeChange('grid')}
+              className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              title="Vista en Tabla / Filas (tipo Excel)"
+              onClick={() => handleViewModeChange('table')}
+              className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                viewMode === 'table'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Table2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -228,13 +272,37 @@ export function SnippetSearch({ initialSnippets }: SnippetSearchProps) {
         </div>
       )}
 
-      {/* Grid de Resultados */}
+      {/* Renderizado de Resultados: Tabla (Excel) o Tarjetas (Grid) */}
       <AnimatePresence mode="wait">
-        <SnippetsGrid
-          snippets={filteredSnippets}
-          onTagClick={handleTagClick}
-          onFavoriteToggle={handleFavoriteToggle}
-        />
+        {viewMode === 'table' ? (
+          <motion.div
+            key="table-view"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <SnippetTableView
+              snippets={filteredSnippets}
+              onTagClick={handleTagClick}
+              onFavoriteToggle={handleFavoriteToggle}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="grid-view"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <SnippetsGrid
+              snippets={filteredSnippets}
+              onTagClick={handleTagClick}
+              onFavoriteToggle={handleFavoriteToggle}
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   )
