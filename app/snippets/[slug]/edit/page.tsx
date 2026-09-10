@@ -17,15 +17,16 @@ export default async function EditSnippetPage({ params }: Props) {
         { slug: decodedSlug },
       ],
     },
+    include: {
+      tags: true,
+    },
   })
 
   if (!snippet) notFound()
 
   return (
-    <main className="min-h-screen p-8 bg-background">
-      <div className="max-w-5xl mx-auto">
-        <EditSnippetForm snippet={snippet} />
-      </div>
-    </main>
+    <div className="max-w-5xl mx-auto px-6 py-10">
+      <EditSnippetForm snippet={snippet} />
+    </div>
   )
 }

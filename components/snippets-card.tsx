@@ -43,26 +43,41 @@ export function SnippetCard({ snippet }: { snippet: any }) {
         visible: { opacity: 1, y: 0 }
       }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="group relative p-6 border rounded-xl bg-card hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+      className="group relative p-6 border rounded-xl bg-card hover:shadow-lg transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
     >
-      <Link href={`/snippets/${snippet.slug}`}>
-        <div className="flex justify-between items-start mb-4">
-          <Badge variant="outline" className="font-mono text-xs">
-            {snippet.language}
-          </Badge>
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            {new Date(snippet.createdAt).toLocaleDateString('es-ES')}
-          </span>
+      <Link href={`/snippets/${snippet.slug}`} className="flex flex-col h-full">
+        <div>
+          <div className="flex justify-between items-start mb-4">
+            <Badge variant="outline" className="font-mono text-xs">
+              {snippet.language}
+            </Badge>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {new Date(snippet.createdAt).toLocaleDateString('es-ES')}
+            </span>
+          </div>
+
+          <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-500 transition-colors">
+            {snippet.title}
+          </h3>
+
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+            {snippet.description || "Sin descripción"}
+          </p>
         </div>
 
-        <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-500 transition-colors">
-          {snippet.title}
-        </h3>
-
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-          {snippet.description || "Sin descripción"}
-        </p>
+        {snippet.tags && snippet.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-border/50">
+            {snippet.tags.map((tag: any) => (
+              <span
+                key={tag.id || tag.name}
+                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-secondary/80 text-secondary-foreground"
+              >
+                #{tag.name}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
       </Link>

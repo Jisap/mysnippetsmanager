@@ -16,6 +16,7 @@ export async function createSnippet(data: {
   description?: string
   code: string
   language: string
+  tags?: string
 }) {
   try {
     let slug = slugify(data.title)
@@ -27,6 +28,12 @@ export async function createSnippet(data: {
       slug = `${slug}-${Date.now().toString(36)}`
     }
 
+    const tagList = (data.tags || '')
+      .split(',')
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean)
+    const uniqueTags = Array.from(new Set(tagList))
+
     const snippet = await prisma.snippet.create({
       data: {
         title: data.title,
@@ -34,6 +41,16 @@ export async function createSnippet(data: {
         description: data.description,
         code: data.code,
         language: data.language,
+        ...(uniqueTags.length > 0
+          ? {
+              tags: {
+                connectOrCreate: uniqueTags.map((name) => ({
+                  where: { name },
+                  create: { name },
+                })),
+              },
+            }
+          : {}),
       },
     })
 
@@ -54,6 +71,7 @@ export async function updateSnippet(
     description?: string
     code: string
     language: string
+    tags?: string
   }
 ) {
   try {
@@ -75,6 +93,12 @@ export async function updateSnippet(
       }
     }
 
+    const tagList = (data.tags || '')
+      .split(',')
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean)
+    const uniqueTags = Array.from(new Set(tagList))
+
     const updated = await prisma.snippet.update({
       where: { id },
       data: {
@@ -83,6 +107,13 @@ export async function updateSnippet(
         description: data.description,
         code: data.code,
         language: data.language,
+        tags: {
+          set: [],
+          connectOrCreate: uniqueTags.map((name) => ({
+            where: { name },
+            create: { name },
+          })),
+        },
       },
     })
 

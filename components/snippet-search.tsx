@@ -14,9 +14,9 @@ interface SnippetSearchProps {
 export function SnippetSearch({ initialSnippets }: SnippetSearchProps) {
   const [query, setQuery] = useState('')
 
-  // Configuración de Fuse para buscar por título, descripción y lenguaje
+  // Configuración de Fuse para buscar por título, descripción, lenguaje, slug y tags
   const fuse = useMemo(() => new Fuse(initialSnippets, {
-    keys: ['title', 'description', 'language'],
+    keys: ['title', 'description', 'language', 'slug', 'tags.name'],
     threshold: 0.3, // Sensibilidad de la búsqueda
   }), [initialSnippets])
 
@@ -27,7 +27,7 @@ export function SnippetSearch({ initialSnippets }: SnippetSearchProps) {
       <div className="relative max-w-md mx-auto">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por título, lenguaje o descripción..."
+          placeholder="Buscar por título, tag, slug, lenguaje..."
           className="pl-10 h-12 bg-background/50 backdrop-blur-sm border-muted"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

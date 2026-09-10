@@ -2,12 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, AlertCircle, Loader2, ArrowLeft, Code } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, Code } from 'lucide-react'
 import Editor from '@monaco-editor/react'
 
 import { Button } from '@/components/ui/button'
@@ -20,6 +19,7 @@ import { configureMonaco } from '@/lib/monaco'
 const formSchema = z.object({
   title: z.string().min(3, { message: 'El título debe tener al menos 3 caracteres' }),
   description: z.string().optional(),
+  tags: z.string().optional(),
   code: z.string().min(1, { message: 'El código no puede estar vacío' }),
   language: z.string({ required_error: 'Selecciona un lenguaje' }),
 })
@@ -31,6 +31,7 @@ interface SnippetData {
   description?: string | null
   code: string
   language: string
+  tags?: Array<{ id: string; name: string }>
 }
 
 export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
@@ -39,11 +40,14 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
+  const initialTags = snippet.tags?.map((t) => t.name).join(', ') || ''
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: snippet.title,
       description: snippet.description || '',
+      tags: initialTags,
       code: snippet.code,
       language: snippet.language,
     },
@@ -80,15 +84,7 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
       className="max-w-4xl mx-auto p-8 border rounded-2xl bg-card shadow-xl backdrop-blur-sm bg-opacity-90"
     >
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <Link
-            href={`/snippets/${snippet.slug}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Cancelar y volver
-          </Link>
-          <h2 className="text-3xl font-bold tracking-tight">Editar Snippet</h2>
-        </div>
+        <h2 className="text-3xl font-bold tracking-tight">Editar Snippet</h2>
         <AnimatePresence>
           {status === 'success' && (
             <motion.div
@@ -157,19 +153,35 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base">Descripción</FormLabel>
-                <FormControl>
-                  <Input placeholder="¿Para qué sirve este código?" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Descripción</FormLabel>
+                  <FormControl>
+                    <Input placeholder="¿Para qué sirve este código?" className="h-11" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Etiquetas (Tags)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="react, hooks, api (separadas por coma)" className="h-11" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}

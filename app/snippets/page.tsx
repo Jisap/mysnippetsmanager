@@ -1,26 +1,25 @@
 // app/snippets/page.tsx
 import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
 import { Code2 } from 'lucide-react'
 import { SnippetSearch } from '@/components/snippet-search'
 
 export default async function SnippetsPage() {
   const snippets = await prisma.snippet.findMany({
+    include: {
+      tags: true,
+    },
     orderBy: { createdAt: 'desc' },
   })
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-10">
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="mb-8">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
           Mis Snippets
         </h1>
-        <Link
-          href="/"
-          className="px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
-        >
-          + Nuevo Snippet
-        </Link>
+        <p className="text-muted-foreground mt-1 text-sm">
+          {snippets.length} {snippets.length === 1 ? 'snippet guardado' : 'snippets guardados'}
+        </p>
       </div>
 
       {snippets.length === 0 ? (

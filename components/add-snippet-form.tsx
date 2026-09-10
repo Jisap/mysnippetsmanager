@@ -18,6 +18,7 @@ import { configureMonaco } from '@/lib/monaco'
 const formSchema = z.object({
   title: z.string().min(3, { message: "El título debe tener al menos 3 caracteres" }),
   description: z.string().optional(),
+  tags: z.string().optional(),
   code: z.string().min(1, { message: "El código no puede estar vacío" }),
   language: z.string({ required_error: "Selecciona un lenguaje" }),
 })
@@ -31,6 +32,7 @@ export function AddSnippetForm() {
     defaultValues: {
       title: '',
       description: '',
+      tags: '',
       code: '',
       language: 'typescript',
     },
@@ -51,6 +53,7 @@ export function AddSnippetForm() {
       form.reset({
         title: '',
         description: '',
+        tags: '',
         code: '',
         language: values.language,
       })
@@ -137,19 +140,35 @@ export function AddSnippetForm() {
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base">Descripción</FormLabel>
-                <FormControl>
-                  <Input placeholder="¿Para qué sirve este código?" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Descripción</FormLabel>
+                  <FormControl>
+                    <Input placeholder="¿Para qué sirve este código?" className="h-11" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base">Etiquetas (Tags)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="react, hooks, api (separadas por coma)" className="h-11" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}

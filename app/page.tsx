@@ -1,20 +1,61 @@
 import { AddSnippetForm } from '@/components/add-snippet-form'
+import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { BookOpen, Code2, Tag } from 'lucide-react'
 
-export default function Home() {
+export default async function Home() {
+  const [snippetCount, tagCount] = await Promise.all([
+    prisma.snippet.count(),
+    prisma.tag.count(),
+  ])
+
   return (
-    <main className="min-h-screen p-8 bg-background">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-10 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-          Mi Gestor de Snippets
-        </h1>
+    <div className="max-w-5xl mx-auto px-6 py-10">
+      {/* Stats row */}
+      {snippetCount > 0 && (
+        <div className="flex flex-wrap gap-3 mb-10">
+          <Link
+            href="/snippets"
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-border/60 bg-card hover:bg-muted/60 transition-colors group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+              <Code2 className="w-4 h-4 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-lg font-bold leading-none">{snippetCount}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {snippetCount === 1 ? 'Snippet guardado' : 'Snippets guardados'}
+              </p>
+            </div>
+          </Link>
 
-        <AddSnippetForm />
+          <Link
+            href="/snippets"
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-border/60 bg-card hover:bg-muted/60 transition-colors group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+              <Tag className="w-4 h-4 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-lg font-bold leading-none">{tagCount}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {tagCount === 1 ? 'Etiqueta única' : 'Etiquetas únicas'}
+              </p>
+            </div>
+          </Link>
 
-        <Link href="/snippets" className="block text-center mt-8 text-blue-500 hover:underline">
-          Ver todos mis snippets →
-        </Link>
-      </div>
-    </main>
+          <Link
+            href="/snippets"
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors ml-auto"
+          >
+            <BookOpen className="w-4 h-4 text-blue-400" />
+            <span className="text-sm font-medium text-blue-400">Ver todos los snippets →</span>
+          </Link>
+        </div>
+      )}
+
+      {/* Formulario principal */}
+      <AddSnippetForm />
+    </div>
   )
 }
