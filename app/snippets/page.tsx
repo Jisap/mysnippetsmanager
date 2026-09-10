@@ -1,17 +1,12 @@
 // app/snippets/page.tsx
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { SnippetsGrid } from '@/components/snippets-card'
+import { Code2 } from 'lucide-react'
+import { SnippetSearch } from '@/components/snippet-search'
 
 export default async function SnippetsPage() {
-  // Consultamos todos los snippets ordenados por fecha
   const snippets = await prisma.snippet.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
-    include: {
-      tags: true, // Por si en el futuro añadimos tags
-    }
+    orderBy: { createdAt: 'desc' },
   })
 
   return (
@@ -28,7 +23,14 @@ export default async function SnippetsPage() {
         </Link>
       </div>
 
-      <SnippetsGrid snippets={snippets} />
+      {snippets.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <Code2 className="w-16 h-16 mx-auto mb-4 opacity-20" />
+          <p>Aún no has guardado ningún snippet.</p>
+        </div>
+      ) : (
+        <SnippetSearch initialSnippets={snippets} />
+      )}
     </div>
   )
 }
