@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { updateSnippet } from '@/app/actions'
+import { configureMonaco } from '@/lib/monaco'
 
 const formSchema = z.object({
   title: z.string().min(3, { message: 'El título debe tener al menos 3 caracteres' }),
@@ -192,6 +193,7 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
                       language={currentLanguage}
                       value={field.value}
                       theme="vs-dark"
+                      beforeMount={configureMonaco}
                       onChange={(value) => field.onChange(value || '')}
                       loading={
                         <div className="h-[350px] flex items-center justify-center text-zinc-400 gap-2 font-mono text-sm">
