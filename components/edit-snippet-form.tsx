@@ -1,37 +1,50 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, AlertCircle, Loader2, Code } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, ArrowLeft, Code } from 'lucide-react'
 import Editor from '@monaco-editor/react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { createSnippet } from '@/app/actions'
+import { updateSnippet } from '@/app/actions'
 
 const formSchema = z.object({
-  title: z.string().min(3, { message: "El título debe tener al menos 3 caracteres" }),
+  title: z.string().min(3, { message: 'El título debe tener al menos 3 caracteres' }),
   description: z.string().optional(),
-  code: z.string().min(1, { message: "El código no puede estar vacío" }),
-  language: z.string({ required_error: "Selecciona un lenguaje" }),
+  code: z.string().min(1, { message: 'El código no puede estar vacío' }),
+  language: z.string({ required_error: 'Selecciona un lenguaje' }),
 })
 
-export function AddSnippetForm() {
+interface SnippetData {
+  id: string
+  title: string
+  slug: string
+  description?: string | null
+  code: string
+  language: string
+}
+
+export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
+  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      code: '',
-      language: 'typescript',
+      title: snippet.title,
+      description: snippet.description || '',
+      code: snippet.code,
+      language: snippet.language,
     },
   })
 
@@ -40,22 +53,21 @@ export function AddSnippetForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     setStatus('idle')
+    setErrorMessage('')
 
-    const result = await createSnippet(values)
+    const result = await updateSnippet(snippet.id, values)
 
     setIsSubmitting(false)
 
-    if (result.success) {
+    if (result.success && result.slug) {
       setStatus('success')
-      form.reset({
-        title: '',
-        description: '',
-        code: '',
-        language: values.language,
-      })
-      setTimeout(() => setStatus('idle'), 3000)
+      router.refresh()
+      setTimeout(() => {
+        router.push(`/snippets/${result.slug}`)
+      }, 1000)
     } else {
       setStatus('error')
+      setErrorMessage(result.error || 'Ocurrió un error al actualizar el snippet')
     }
   }
 
@@ -63,11 +75,19 @@ export function AddSnippetForm() {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
       className="max-w-4xl mx-auto p-8 border rounded-2xl bg-card shadow-xl backdrop-blur-sm bg-opacity-90"
     >
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-bold tracking-tight">Nuevo Snippet</h2>
+        <div>
+          <Link
+            href={`/snippets/${snippet.slug}`}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Cancelar y volver
+          </Link>
+          <h2 className="text-3xl font-bold tracking-tight">Editar Snippet</h2>
+        </div>
         <AnimatePresence>
           {status === 'success' && (
             <motion.div
@@ -76,7 +96,7 @@ export function AddSnippetForm() {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2 text-green-500 bg-green-500/10 px-3 py-1 rounded-full text-sm font-medium"
             >
-              <CheckCircle2 className="w-4 h-4" /> Guardado
+              <CheckCircle2 className="w-4 h-4" /> Cambios Guardados
             </motion.div>
           )}
           {status === 'error' && (
@@ -86,7 +106,7 @@ export function AddSnippetForm() {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2 text-destructive bg-destructive/10 px-3 py-1 rounded-full text-sm font-medium"
             >
-              <AlertCircle className="w-4 h-4" /> Error al guardar el snippet
+              <AlertCircle className="w-4 h-4" /> {errorMessage}
             </motion.div>
           )}
         </AnimatePresence>
@@ -168,13 +188,13 @@ export function AddSnippetForm() {
                       <span>VS Code Editor</span>
                     </div>
                     <Editor
-                      height="320px"
+                      height="350px"
                       language={currentLanguage}
                       value={field.value}
                       theme="vs-dark"
                       onChange={(value) => field.onChange(value || '')}
                       loading={
-                        <div className="h-[320px] flex items-center justify-center text-zinc-400 gap-2 font-mono text-sm">
+                        <div className="h-[350px] flex items-center justify-center text-zinc-400 gap-2 font-mono text-sm">
                           <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
                           Cargando editor...
                         </div>
@@ -201,21 +221,30 @@ export function AddSnippetForm() {
             )}
           />
 
-          <div className="pt-4">
+          <div className="flex gap-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-1/3 h-12 text-base"
+              onClick={() => router.push(`/snippets/${snippet.slug}`)}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all"
+              className="w-2/3 h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
                 >
                   <Loader2 className="w-5 h-5 mr-2" />
                 </motion.div>
               ) : null}
-              {isSubmitting ? 'Procesando...' : 'Guardar en Base de Datos'}
+              {isSubmitting ? 'Guardando Cambios...' : 'Actualizar Snippet'}
             </Button>
           </div>
         </form>

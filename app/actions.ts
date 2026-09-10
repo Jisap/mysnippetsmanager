@@ -2,7 +2,14 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/ /g, '-')
+    .replace(/[^\w-]+/g, '')
+}
 
 export async function createSnippet(data: {
   title: string
@@ -11,13 +18,16 @@ export async function createSnippet(data: {
   language: string
 }) {
   try {
-    // Generamos un slug simple a partir del título
-    const slug = data.title
-      .toLowerCase()
-      .replace(/ /g, '-')
-      .replace(/[^\w-]+/g, '')
+    let slug = slugify(data.title)
+    if (!slug) slug = `snippet-${Date.now().toString(36)}`
 
-    await prisma.snippet.create({
+    // Verificar si el slug ya existe
+    const existing = await prisma.snippet.findUnique({ where: { slug } })
+    if (existing) {
+      slug = `${slug}-${Date.now().toString(36)}`
+    }
+
+    const snippet = await prisma.snippet.create({
       data: {
         title: data.title,
         slug: slug,
@@ -27,14 +37,83 @@ export async function createSnippet(data: {
       },
     })
 
-    // Revalidamos la caché para que aparezca el nuevo snippet si estamos en la lista
     revalidatePath('/')
+    revalidatePath('/snippets')
 
-    // Opcional: redirigir o mostrar mensaje de éxito
-    return { success: true }
+    return { success: true, slug: snippet.slug }
   } catch (error) {
     console.error('Error creating snippet:', error)
     return { success: false, error: 'No se pudo guardar el snippet' }
+  }
+}
+
+export async function updateSnippet(
+  id: string,
+  data: {
+    title: string
+    description?: string
+    code: string
+    language: string
+  }
+) {
+  try {
+    const existing = await prisma.snippet.findUnique({ where: { id } })
+    if (!existing) {
+      return { success: false, error: 'Snippet no encontrado' }
+    }
+
+    let slug = slugify(data.title)
+    if (!slug) {
+      slug = existing.slug
+    }
+
+    // Si el slug ha cambiado, verificar colisiones
+    if (slug !== existing.slug) {
+      const conflict = await prisma.snippet.findUnique({ where: { slug } })
+      if (conflict && conflict.id !== id) {
+        slug = `${slug}-${Date.now().toString(36)}`
+      }
+    }
+
+    const updated = await prisma.snippet.update({
+      where: { id },
+      data: {
+        title: data.title,
+        slug,
+        description: data.description,
+        code: data.code,
+        language: data.language,
+      },
+    })
+
+    revalidatePath('/')
+    revalidatePath('/snippets')
+    revalidatePath(`/snippets/${existing.slug}`)
+    if (slug !== existing.slug) {
+      revalidatePath(`/snippets/${slug}`)
+    }
+
+    return { success: true, slug: updated.slug }
+  } catch (error) {
+    console.error('Error updating snippet:', error)
+    return { success: false, error: 'No se pudo actualizar el snippet' }
+  }
+}
+
+export async function deleteSnippet(id: string) {
+  try {
+    const deleted = await prisma.snippet.delete({
+      where: { id },
+    })
+
+    revalidatePath('/')
+    revalidatePath('/snippets')
+    revalidatePath(`/snippets/${deleted.slug}`)
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting snippet:', error)
+    return { success: false, error: 'No se pudo eliminar el snippet' }
   }
 }
 

@@ -4,8 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { highlightCode } from '@/lib/shiki'
 import { CodeViewer } from '@/components/code-viewer'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { DeleteSnippetButton } from '@/components/delete-snippet-button'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -31,9 +33,22 @@ export default async function SnippetDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto p-8">
-      <Link href="/snippets" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Volver a la lista
-      </Link>
+      <div className="flex items-center justify-between mb-8">
+        <Link href="/snippets" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Volver a la lista
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/snippets/${snippet.slug}/edit`} className="flex items-center gap-1.5">
+              <Pencil className="w-4 h-4" />
+              <span>Editar</span>
+            </Link>
+          </Button>
+
+          <DeleteSnippetButton snippetId={snippet.id} snippetTitle={snippet.title} />
+        </div>
+      </div>
 
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
