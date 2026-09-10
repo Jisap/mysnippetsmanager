@@ -1,28 +1,30 @@
 // lib/shiki.ts
-import { createHighlighter } from 'shiki'
+import { createHighlighter, type Highlighter } from 'shiki'
 
-// Creamos una instancia única para no recargar los temas/lenguajes en cada petición
-let highlighter: any = null
+let highlighter: Highlighter | null = null
 
 export async function getHighlighter() {
     if (!highlighter) {
         highlighter = await createHighlighter({
-            themes: ['github-dark'], // Puedes añadir más temas si quieres
-            langs: ['javascript', 'typescript', 'python', 'css', 'html', 'sql', 'json', 'bash'],
+            themes: ['github-dark', 'github-light', 'dracula', 'one-dark-pro'],
+            langs: ['javascript', 'typescript', 'python', 'css', 'html', 'sql', 'json', 'bash', 'rust', 'go'],
         })
     }
     return highlighter
 }
 
-export async function highlightCode(code: string, lang: string) {
+export async function highlightCode(code: string, lang: string, theme: string = 'github-dark') {
     const hl = await getHighlighter()
 
-    // Si el lenguaje no está soportado, usamos plaintext para evitar errores
     const supportedLangs = hl.getLoadedLanguages()
     const language = supportedLangs.includes(lang) ? lang : 'plaintext'
 
+    // Verificamos si el tema existe, si no usamos el por defecto
+    const availableThemes = hl.getLoadedThemes()
+    const selectedTheme = availableThemes.includes(theme as any) ? theme : 'github-dark'
+
     return hl.codeToHtml(code, {
         lang: language,
-        theme: 'github-dark',
+        theme: selectedTheme as any,
     })
 }

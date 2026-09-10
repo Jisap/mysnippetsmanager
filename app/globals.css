@@ -121,10 +121,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
+}
+
+/* Estilos para el visor de código */
+pre.shiki {
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  font-family: var(--font-mono), monospace !important;
+  white-space: pre !important;
+  word-break: normal !important;
+}
+
+pre.shiki code {
+  font-family: inherit !important;
+  display: block;
 }

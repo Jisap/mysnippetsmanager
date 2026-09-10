@@ -37,3 +37,8 @@ export async function createSnippet(data: {
     return { success: false, error: 'No se pudo guardar el snippet' }
   }
 }
+
+export async function getHighlightedCodeAction(code: string, lang: string, theme: string = 'github-dark') {
+  const { highlightCode } = await import('@/lib/shiki')
+  return highlightCode(code, lang, theme)
+}
