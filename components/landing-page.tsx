@@ -286,16 +286,6 @@ export function LandingPage() {
           </Button>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-6 py-8 border-t border-border/40 text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Code2 className="w-4 h-4 text-blue-400" />
-          <span className="font-semibold text-foreground">SnippetManager</span>
-          <span>— Tu gestor de código personal</span>
-        </div>
-        <p>© {new Date().getFullYear()} SnippetManager. Todos los derechos reservados.</p>
-      </footer>
     </div>
   )
 }

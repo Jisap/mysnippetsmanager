@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { Footer } from "@/components/footer";
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
         <main className="flex-1">
           {children}
         </main>
+        <Footer />
       </body>
     </html>
   );
