@@ -52,7 +52,7 @@ export function SnippetCard({ snippet }: { snippet: any }) {
           </Badge>
           <span className="text-xs text-muted-foreground flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            {new Date(snippet.createdAt).toLocaleDateString()}
+            {new Date(snippet.createdAt).toLocaleDateString('es-ES')}
           </span>
         </div>
 
