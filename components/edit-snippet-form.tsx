@@ -20,6 +20,7 @@ const formSchema = z.object({
   title: z.string().min(3, { message: 'El título debe tener al menos 3 caracteres' }),
   description: z.string().optional(),
   tags: z.string().optional(),
+  notes: z.string().optional(),
   code: z.string().min(1, { message: 'El código no puede estar vacío' }),
   language: z.string({ required_error: 'Selecciona un lenguaje' }),
 })
@@ -29,6 +30,7 @@ interface SnippetData {
   title: string
   slug: string
   description?: string | null
+  notes?: string | null
   code: string
   language: string
   tags?: Array<{ id: string; name: string }>
@@ -48,6 +50,7 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
       title: snippet.title,
       description: snippet.description || '',
       tags: initialTags,
+      notes: snippet.notes || '',
       code: snippet.code,
       language: snippet.language,
     },
@@ -230,6 +233,28 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
                       }}
                     />
                   </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between mb-1.5">
+                  <FormLabel className="text-base">Notas y Explicación (Markdown Opcional)</FormLabel>
+                  <span className="text-xs text-muted-foreground">Documentación técnica, parámetros o casos de uso</span>
+                </div>
+                <FormControl>
+                  <textarea
+                    rows={4}
+                    placeholder="Describe cómo funciona el código, parámetros, ejemplos de invocación o advertencias... (Soporta Markdown básico: ### Títulos, - Listas, **Negrita**, `código`)"
+                    className="w-full p-3.5 rounded-xl bg-background border border-input focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none text-sm font-mono leading-relaxed placeholder:text-muted-foreground/60 transition-all resize-y"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

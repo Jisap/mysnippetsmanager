@@ -7,7 +7,7 @@ export default async function Home() {
   const [snippetCount, tagCount, favoriteCount] = await Promise.all([
     prisma.snippet.count(),
     prisma.tag.count(),
-    (prisma.snippet as any).count({ where: { isFavorite: true } }),
+    prisma.snippet.count({ where: { isFavorite: true } }),
   ])
 
   return (

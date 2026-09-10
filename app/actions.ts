@@ -17,6 +17,7 @@ export async function createSnippet(data: {
   code: string
   language: string
   tags?: string
+  notes?: string
 }) {
   try {
     let slug = slugify(data.title)
@@ -41,6 +42,7 @@ export async function createSnippet(data: {
         description: data.description,
         code: data.code,
         language: data.language,
+        notes: data.notes || null,
         ...(uniqueTags.length > 0
           ? {
               tags: {
@@ -72,6 +74,7 @@ export async function updateSnippet(
     code: string
     language: string
     tags?: string
+    notes?: string
   }
 ) {
   try {
@@ -107,6 +110,7 @@ export async function updateSnippet(
         description: data.description,
         code: data.code,
         language: data.language,
+        notes: data.notes || null,
         tags: {
           set: [],
           connectOrCreate: uniqueTags.map((name) => ({
@@ -131,6 +135,30 @@ export async function updateSnippet(
   }
 }
 
+export async function updateSnippetNotes(id: string, notes: string) {
+  try {
+    const existing = await prisma.snippet.findUnique({
+      where: { id },
+      select: { id: true, slug: true },
+    })
+
+    if (!existing) {
+      return { success: false, error: 'Snippet no encontrado' }
+    }
+
+    const updated = await prisma.snippet.update({
+      where: { id },
+      data: { notes: notes || null },
+    })
+
+    revalidatePath(`/snippets/${existing.slug}`)
+    return { success: true, notes: updated.notes }
+  } catch (error) {
+    console.error('Error updating snippet notes:', error)
+    return { success: false, error: 'No se pudieron guardar las notas' }
+  }
+}
+
 export async function deleteSnippet(id: string) {
   try {
     const deleted = await prisma.snippet.delete({
@@ -150,7 +178,7 @@ export async function deleteSnippet(id: string) {
 
 export async function toggleFavoriteSnippet(id: string) {
   try {
-    const existing = await (prisma.snippet as any).findUnique({
+    const existing = await prisma.snippet.findUnique({
       where: { id },
       select: { id: true, isFavorite: true, slug: true },
     })
@@ -159,7 +187,7 @@ export async function toggleFavoriteSnippet(id: string) {
       return { success: false, error: 'Snippet no encontrado' }
     }
 
-    const updated = await (prisma.snippet as any).update({
+    const updated = await prisma.snippet.update({
       where: { id },
       data: { isFavorite: !existing.isFavorite },
     })
@@ -193,13 +221,14 @@ export async function duplicateSnippet(id: string) {
       slug = `${slug}-${Date.now().toString(36)}`
     }
 
-    const duplicate = await (prisma.snippet as any).create({
+    const duplicate = await prisma.snippet.create({
       data: {
         title,
         slug,
         description: original.description,
         code: original.code,
         language: original.language,
+        notes: original.notes || null,
         isFavorite: false,
         tags: {
           connect: original.tags.map((t: any) => ({ id: t.id })),

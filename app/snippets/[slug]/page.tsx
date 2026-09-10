@@ -2,7 +2,7 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { highlightCode } from '@/lib/shiki'
-import { CodeViewer } from '@/components/code-viewer'
+import { SnippetDetailView } from '@/components/snippet-detail-view'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DeleteSnippetButton } from '@/components/delete-snippet-button'
@@ -20,7 +20,7 @@ export default async function SnippetDetailPage({ params }: Props) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
 
-  const snippet = await (prisma.snippet as any).findFirst({
+  const snippet = await prisma.snippet.findFirst({
     where: {
       OR: [
         { slug: slug },
@@ -38,7 +38,7 @@ export default async function SnippetDetailPage({ params }: Props) {
   const initialHtml = await highlightCode(snippet.code, snippet.language, 'github-dark')
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="max-w-6xl mx-auto px-6 py-10">
       {/* Header: título + metadatos + barra de acciones */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
         <div className="flex-1 min-w-0">
@@ -90,12 +90,13 @@ export default async function SnippetDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Visor de Código */}
-      <CodeViewer
+      {/* Visor Interactivo con Tabs y Split View */}
+      <SnippetDetailView
+        snippetId={snippet.id}
         code={snippet.code}
         initialHtml={initialHtml}
-        initialLanguage={snippet.language}
-        initialTheme="github-dark"
+        language={snippet.language}
+        notes={snippet.notes}
       />
 
       <div className="mt-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border/40 pt-4">
