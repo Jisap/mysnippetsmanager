@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Snippet {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String?
+  code        String
+  language    String
+  notes       String?
+  isFavorite  Boolean  @default(false)
+  userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tags Tag[]
+
+  @@index([slug])
+  @@index([isFavorite])
+  @@index([userId])
+}
+
+model Tag {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  snippets Snippet[]
+
+  @@index([name])
+}

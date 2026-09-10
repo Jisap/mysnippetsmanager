@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
 
 function slugify(text: string) {
   return text
@@ -20,6 +21,9 @@ export async function createSnippet(data: {
   notes?: string
 }) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
     let slug = slugify(data.title)
     if (!slug) slug = `snippet-${Date.now().toString(36)}`
 
@@ -43,6 +47,7 @@ export async function createSnippet(data: {
         code: data.code,
         language: data.language,
         notes: data.notes || null,
+        userId: user?.id || null,
         ...(uniqueTags.length > 0
           ? {
               tags: {
@@ -205,6 +210,9 @@ export async function toggleFavoriteSnippet(id: string) {
 
 export async function duplicateSnippet(id: string) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
     const original = await prisma.snippet.findUnique({
       where: { id },
       include: { tags: true },
@@ -229,6 +237,7 @@ export async function duplicateSnippet(id: string) {
         code: original.code,
         language: original.language,
         notes: original.notes || null,
+        userId: user?.id || null,
         isFavorite: false,
         tags: {
           connect: original.tags.map((t: any) => ({ id: t.id })),
@@ -253,7 +262,11 @@ export async function getHighlightedCodeAction(code: string, lang: string, theme
 
 export async function exportAllSnippetsAction() {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
     const snippets = await prisma.snippet.findMany({
+      where: user ? { userId: user.id } : { userId: null },
       include: {
         tags: {
           select: { name: true },
@@ -289,6 +302,9 @@ export async function exportAllSnippetsAction() {
 
 export async function importSnippetsAction(items: any[]) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
     if (!Array.isArray(items) || items.length === 0) {
       return { success: false, error: 'El archivo de copia de seguridad no contiene snippets válidos' }
     }
@@ -320,6 +336,7 @@ export async function importSnippetsAction(items: any[]) {
           code: item.code,
           language: item.language,
           notes: item.notes || null,
+          userId: user?.id || null,
           isFavorite: Boolean(item.isFavorite),
           ...(uniqueTags.length > 0
             ? {

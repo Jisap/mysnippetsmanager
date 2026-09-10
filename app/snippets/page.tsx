@@ -3,9 +3,20 @@ import { prisma } from '@/lib/prisma'
 import { Code2 } from 'lucide-react'
 import { SnippetSearch } from '@/components/snippet-search'
 import { BackupDialog } from '@/components/backup-dialog'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export default async function SnippetsPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Si no hay sesión, redirigir al login
+  if (!user) redirect('/login')
+
   const snippets = await prisma.snippet.findMany({
+    where: { userId: user.id },
     include: {
       tags: true,
     },

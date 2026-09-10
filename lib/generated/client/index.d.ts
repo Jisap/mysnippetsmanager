@@ -1032,6 +1032,7 @@ export namespace Prisma {
     language: string | null
     notes: string | null
     isFavorite: boolean | null
+    userId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1045,6 +1046,7 @@ export namespace Prisma {
     language: string | null
     notes: string | null
     isFavorite: boolean | null
+    userId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -1058,6 +1060,7 @@ export namespace Prisma {
     language: number
     notes: number
     isFavorite: number
+    userId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -1073,6 +1076,7 @@ export namespace Prisma {
     language?: true
     notes?: true
     isFavorite?: true
+    userId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1086,6 +1090,7 @@ export namespace Prisma {
     language?: true
     notes?: true
     isFavorite?: true
+    userId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -1099,6 +1104,7 @@ export namespace Prisma {
     language?: true
     notes?: true
     isFavorite?: true
+    userId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -1185,6 +1191,7 @@ export namespace Prisma {
     language: string
     notes: string | null
     isFavorite: boolean
+    userId: string | null
     createdAt: Date
     updatedAt: Date
     _count: SnippetCountAggregateOutputType | null
@@ -1215,6 +1222,7 @@ export namespace Prisma {
     language?: boolean
     notes?: boolean
     isFavorite?: boolean
+    userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     tags?: boolean | Snippet$tagsArgs<ExtArgs>
@@ -1230,6 +1238,7 @@ export namespace Prisma {
     language?: boolean
     notes?: boolean
     isFavorite?: boolean
+    userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["snippet"]>
@@ -1243,6 +1252,7 @@ export namespace Prisma {
     language?: boolean
     notes?: boolean
     isFavorite?: boolean
+    userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["snippet"]>
@@ -1256,11 +1266,12 @@ export namespace Prisma {
     language?: boolean
     notes?: boolean
     isFavorite?: boolean
+    userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SnippetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "slug" | "description" | "code" | "language" | "notes" | "isFavorite" | "createdAt" | "updatedAt", ExtArgs["result"]["snippet"]>
+  export type SnippetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "slug" | "description" | "code" | "language" | "notes" | "isFavorite" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["snippet"]>
   export type SnippetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tags?: boolean | Snippet$tagsArgs<ExtArgs>
     _count?: boolean | SnippetCountOutputTypeDefaultArgs<ExtArgs>
@@ -1282,6 +1293,7 @@ export namespace Prisma {
       language: string
       notes: string | null
       isFavorite: boolean
+      userId: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["snippet"]>
@@ -1716,6 +1728,7 @@ export namespace Prisma {
     readonly language: FieldRef<"Snippet", 'String'>
     readonly notes: FieldRef<"Snippet", 'String'>
     readonly isFavorite: FieldRef<"Snippet", 'Boolean'>
+    readonly userId: FieldRef<"Snippet", 'String'>
     readonly createdAt: FieldRef<"Snippet", 'DateTime'>
     readonly updatedAt: FieldRef<"Snippet", 'DateTime'>
   }
@@ -3202,6 +3215,7 @@ export namespace Prisma {
     language: 'language',
     notes: 'notes',
     isFavorite: 'isFavorite',
+    userId: 'userId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -3310,6 +3324,7 @@ export namespace Prisma {
     language?: StringFilter<"Snippet"> | string
     notes?: StringNullableFilter<"Snippet"> | string | null
     isFavorite?: BoolFilter<"Snippet"> | boolean
+    userId?: StringNullableFilter<"Snippet"> | string | null
     createdAt?: DateTimeFilter<"Snippet"> | Date | string
     updatedAt?: DateTimeFilter<"Snippet"> | Date | string
     tags?: TagListRelationFilter
@@ -3324,6 +3339,7 @@ export namespace Prisma {
     language?: SortOrder
     notes?: SortOrderInput | SortOrder
     isFavorite?: SortOrder
+    userId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     tags?: TagOrderByRelationAggregateInput
@@ -3341,6 +3357,7 @@ export namespace Prisma {
     language?: StringFilter<"Snippet"> | string
     notes?: StringNullableFilter<"Snippet"> | string | null
     isFavorite?: BoolFilter<"Snippet"> | boolean
+    userId?: StringNullableFilter<"Snippet"> | string | null
     createdAt?: DateTimeFilter<"Snippet"> | Date | string
     updatedAt?: DateTimeFilter<"Snippet"> | Date | string
     tags?: TagListRelationFilter
@@ -3355,6 +3372,7 @@ export namespace Prisma {
     language?: SortOrder
     notes?: SortOrderInput | SortOrder
     isFavorite?: SortOrder
+    userId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: SnippetCountOrderByAggregateInput
@@ -3374,6 +3392,7 @@ export namespace Prisma {
     language?: StringWithAggregatesFilter<"Snippet"> | string
     notes?: StringNullableWithAggregatesFilter<"Snippet"> | string | null
     isFavorite?: BoolWithAggregatesFilter<"Snippet"> | boolean
+    userId?: StringNullableWithAggregatesFilter<"Snippet"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Snippet"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Snippet"> | Date | string
   }
@@ -3427,6 +3446,7 @@ export namespace Prisma {
     language: string
     notes?: string | null
     isFavorite?: boolean
+    userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     tags?: TagCreateNestedManyWithoutSnippetsInput
@@ -3441,6 +3461,7 @@ export namespace Prisma {
     language: string
     notes?: string | null
     isFavorite?: boolean
+    userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     tags?: TagUncheckedCreateNestedManyWithoutSnippetsInput
@@ -3455,6 +3476,7 @@ export namespace Prisma {
     language?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tags?: TagUpdateManyWithoutSnippetsNestedInput
@@ -3469,6 +3491,7 @@ export namespace Prisma {
     language?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tags?: TagUncheckedUpdateManyWithoutSnippetsNestedInput
@@ -3483,6 +3506,7 @@ export namespace Prisma {
     language: string
     notes?: string | null
     isFavorite?: boolean
+    userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -3496,6 +3520,7 @@ export namespace Prisma {
     language?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3509,6 +3534,7 @@ export namespace Prisma {
     language?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3622,6 +3648,7 @@ export namespace Prisma {
     language?: SortOrder
     notes?: SortOrder
     isFavorite?: SortOrder
+    userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -3635,6 +3662,7 @@ export namespace Prisma {
     language?: SortOrder
     notes?: SortOrder
     isFavorite?: SortOrder
+    userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -3648,6 +3676,7 @@ export namespace Prisma {
     language?: SortOrder
     notes?: SortOrder
     isFavorite?: SortOrder
+    userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -3997,6 +4026,7 @@ export namespace Prisma {
     language: string
     notes?: string | null
     isFavorite?: boolean
+    userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -4010,6 +4040,7 @@ export namespace Prisma {
     language: string
     notes?: string | null
     isFavorite?: boolean
+    userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -4047,6 +4078,7 @@ export namespace Prisma {
     language?: StringFilter<"Snippet"> | string
     notes?: StringNullableFilter<"Snippet"> | string | null
     isFavorite?: BoolFilter<"Snippet"> | boolean
+    userId?: StringNullableFilter<"Snippet"> | string | null
     createdAt?: DateTimeFilter<"Snippet"> | Date | string
     updatedAt?: DateTimeFilter<"Snippet"> | Date | string
   }
@@ -4075,6 +4107,7 @@ export namespace Prisma {
     language?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -4088,6 +4121,7 @@ export namespace Prisma {
     language?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -4101,6 +4135,7 @@ export namespace Prisma {
     language?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     isFavorite?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

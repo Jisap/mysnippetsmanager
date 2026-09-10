@@ -1,6 +1,6 @@
 generator client {
     provider = "prisma-client-js"
-    output   = "../lib/generated/client"
+    output   = "../lib/generated/prisma"
 }
 
 datasource db {
@@ -18,6 +18,7 @@ model Snippet {
     language    String
     notes       String?
     isFavorite  Boolean  @default(false)
+    userId      String?
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
@@ -25,6 +26,7 @@ model Snippet {
 
     @@index([slug])
     @@index([isFavorite])
+    @@index([userId])
 }
 
 model Tag {
