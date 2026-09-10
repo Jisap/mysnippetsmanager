@@ -9,6 +9,7 @@ import { DeleteSnippetButton } from '@/components/delete-snippet-button'
 import { FavoriteButton } from '@/components/favorite-button'
 import { DuplicateSnippetButton } from '@/components/duplicate-snippet-button'
 import { ShareSnippetButton } from '@/components/share-snippet-button'
+import { ExportSnippetDialog } from '@/components/export-snippet-dialog'
 import Link from 'next/link'
 import { Pencil, Tag, Calendar } from 'lucide-react'
 
@@ -74,6 +75,8 @@ export default async function SnippetDetailPage({ params }: Props) {
             showLabel={true}
             className="border border-border/60 bg-background/50 hover:bg-muted"
           />
+
+          <ExportSnippetDialog snippet={snippet} />
 
           <ShareSnippetButton title={snippet.title} />
 
