@@ -6,7 +6,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, AlertCircle, Loader2, Code } from 'lucide-react'
-import Editor from '@monaco-editor/react'
+import dynamic from 'next/dynamic'
+
+const Editor = dynamic(() => import('@monaco-editor/react').then((m) => m.default), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[320px] flex items-center justify-center text-zinc-400 gap-2 font-mono text-sm">
+      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+      Cargando editor...
+    </div>
+  ),
+})
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

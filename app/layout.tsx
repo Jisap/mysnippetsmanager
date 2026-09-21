@@ -8,18 +8,21 @@ import { Footer } from "@/components/footer";
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const fontHeading = Outfit({
   variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 
 const fontMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
