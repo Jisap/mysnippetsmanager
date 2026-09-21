@@ -18,6 +18,25 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { title: 'Snippet' }
+
+  const snippet = await prisma.snippet.findFirst({
+    where: { userId: user.id, slug: decodeURIComponent(slug) },
+    select: { title: true, description: true, language: true },
+  })
+  if (!snippet) return { title: 'Snippet no encontrado' }
+  return {
+    title: snippet.title,
+    description: snippet.description || `Snippet de ${snippet.language}`,
+  }
+}
+
 export default async function SnippetDetailPage({ params }: Props) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)

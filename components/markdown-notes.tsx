@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { Edit3, Check, X, Loader2, BookOpen, Sparkles, FileText, AlertCircle } from 'lucide-react'
 import { updateSnippetNotes } from '@/app/actions'
 import { Button } from '@/components/ui/button'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeSanitize from 'rehype-sanitize'
 
 interface MarkdownNotesProps {
   snippetId: string
@@ -189,7 +192,7 @@ export function MarkdownNotes({
         <div>
           {notes ? (
             <div className="prose prose-invert max-w-none text-sm leading-relaxed space-y-3 text-foreground/90">
-              <SimpleMarkdownRenderer content={notes} />
+              <MarkdownContent content={notes} />
             </div>
           ) : (
             <div className="text-center py-10 px-4 rounded-xl border border-dashed border-border/60 bg-muted/20">
@@ -216,161 +219,78 @@ export function MarkdownNotes({
 }
 
 /**
- * Renderizador ligero y seguro de Markdown para notas
+ * Renderizado Markdown real (GFM) y saneado para notas.
+ * Soporta tablas, listas, enlaces, código, citas, tachado y checklist.
  */
-function SimpleMarkdownRenderer({ content }: { content: string }) {
-  const lines = content.split('\n')
-  const elements: React.ReactNode[] = []
-  let inCodeBlock = false
-  let codeBlockContent: string[] = []
-
-  lines.forEach((line, index) => {
-    // Bloques de código ```
-    if (line.trim().startsWith('```')) {
-      if (inCodeBlock) {
-        elements.push(
-          <pre
-            key={`code-${index}`}
-            className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono overflow-x-auto text-zinc-300 my-2.5"
-          >
-            <code>{codeBlockContent.join('\n')}</code>
-          </pre>
-        )
-        codeBlockContent = []
-        inCodeBlock = false
-      } else {
-        inCodeBlock = true
-      }
-      return
-    }
-
-    if (inCodeBlock) {
-      codeBlockContent.push(line)
-      return
-    }
-
-    // Encabezados
-    if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={index} className="text-base font-bold text-foreground mt-4 mb-1.5 flex items-center gap-1.5">
-          {renderFormattedText(line.replace('### ', ''))}
-        </h3>
-      )
-      return
-    }
-    if (line.startsWith('## ')) {
-      elements.push(
-        <h2 key={index} className="text-lg font-bold text-foreground mt-5 mb-2 pb-1 border-b border-border/40">
-          {renderFormattedText(line.replace('## ', ''))}
-        </h2>
-      )
-      return
-    }
-    if (line.startsWith('# ')) {
-      elements.push(
-        <h1 key={index} className="text-xl font-extrabold text-foreground mt-6 mb-2.5">
-          {renderFormattedText(line.replace('# ', ''))}
-        </h1>
-      )
-      return
-    }
-
-    // Citas / Callouts (alertas >)
-    if (line.startsWith('> ')) {
-      elements.push(
-        <div
-          key={index}
-          className="border-l-2 border-purple-500 bg-purple-500/10 px-3.5 py-2 rounded-r-lg text-xs text-purple-200 my-2"
-        >
-          {renderFormattedText(line.replace('> ', ''))}
-        </div>
-      )
-      return
-    }
-
-    // Listas con guión
-    if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-      elements.push(
-        <li key={index} className="ml-4 list-disc text-sm my-0.5 text-foreground/90">
-          {renderFormattedText(line.trim().substring(2))}
-        </li>
-      )
-      return
-    }
-
-    // Líneas vacías
-    if (!line.trim()) {
-      elements.push(<div key={index} className="h-2" />)
-      return
-    }
-
-    // Párrafos regulares
-    elements.push(
-      <p key={index} className="text-sm leading-relaxed my-1 text-foreground/90">
-        {renderFormattedText(line)}
-      </p>
-    )
-  })
-
-  // Si quedó un bloque de código abierto
-  if (inCodeBlock && codeBlockContent.length > 0) {
-    elements.push(
-      <pre
-        key="code-last"
-        className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono overflow-x-auto text-zinc-300 my-2.5"
+function MarkdownContent({ content }: { content: string }) {
+  return (
+    <div className="space-y-1">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeSanitize]}
+        components={{
+          h1: ({ children }) => (
+            <h1 className="text-xl font-extrabold text-foreground mt-6 mb-2.5">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-lg font-bold text-foreground mt-5 mb-2 pb-1 border-b border-border/40">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-base font-bold text-foreground mt-4 mb-1.5">{children}</h3>
+          ),
+          p: ({ children }) => (
+            <p className="text-sm leading-relaxed my-1 text-foreground/90">{children}</p>
+          ),
+          blockquote: ({ children }) => (
+            <div className="border-l-2 border-purple-500 bg-purple-500/10 px-3.5 py-2 rounded-r-lg text-xs text-purple-200 my-2">
+              {children}
+            </div>
+          ),
+          ul: ({ children }) => <ul className="ml-4 list-disc space-y-0.5 my-1">{children}</ul>,
+          ol: ({ children }) => <ol className="ml-4 list-decimal space-y-0.5 my-1">{children}</ol>,
+          li: ({ children }) => <li className="text-sm my-0.5 text-foreground/90">{children}</li>,
+          code: ({ children }) => (
+            <code className="font-mono text-xs bg-muted/80 text-purple-400 px-1.5 py-0.5 rounded border border-border/50">
+              {children}
+            </code>
+          ),
+          pre: ({ children }) => (
+            <pre className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono overflow-x-auto text-zinc-300 my-2.5 [&>code]:bg-transparent [&>code]:border-0 [&>code]:p-0 [&>code]:text-inherit">
+              {children}
+            </pre>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-400 underline underline-offset-2 hover:text-blue-300"
+            >
+              {children}
+            </a>
+          ),
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-2.5">
+              <table className="w-full text-xs border-collapse">{children}</table>
+            </div>
+          ),
+          th: ({ children }) => (
+            <th className="border border-border px-2 py-1.5 bg-muted/50 text-left font-semibold">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => <td className="border border-border px-2 py-1.5">{children}</td>,
+          hr: () => <hr className="border-border/60 my-4" />,
+          strong: ({ children }) => (
+            <strong className="font-semibold text-foreground">{children}</strong>
+          ),
+          em: ({ children }) => <em className="italic text-foreground/90">{children}</em>,
+        }}
       >
-        <code>{codeBlockContent.join('\n')}</code>
-      </pre>
-    )
-  }
-
-  return <div className="space-y-1">{elements}</div>
-}
-
-/**
- * Formateador de texto inline: **negrita**, *cursiva*, `código inline`
- */
-function renderFormattedText(text: string): React.ReactNode {
-  const parts: React.ReactNode[] = []
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.substring(lastIndex, match.index))
-    }
-
-    const token = match[0]
-    if (token.startsWith('`') && token.endsWith('`')) {
-      parts.push(
-        <code
-          key={match.index}
-          className="font-mono text-xs bg-muted/80 text-purple-400 px-1.5 py-0.5 rounded border border-border/50"
-        >
-          {token.slice(1, -1)}
-        </code>
-      )
-    } else if (token.startsWith('**') && token.endsWith('**')) {
-      parts.push(
-        <strong key={match.index} className="font-semibold text-foreground">
-          {token.slice(2, -2)}
-        </strong>
-      )
-    } else if (token.startsWith('*') && token.endsWith('*')) {
-      parts.push(
-        <em key={match.index} className="italic text-foreground/90">
-          {token.slice(1, -1)}
-        </em>
-      )
-    }
-
-    lastIndex = regex.lastIndex
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex))
-  }
-
-  return parts.length > 0 ? parts : text
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
 }

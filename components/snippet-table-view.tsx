@@ -237,6 +237,7 @@ export function SnippetTableView({
                       <Link
                         href={`/snippets/${snippet.slug}`}
                         title="Ver detalle"
+                        aria-label={`Ver detalle de ${snippet.title}`}
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />

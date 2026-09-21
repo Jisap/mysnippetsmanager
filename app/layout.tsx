@@ -27,8 +27,24 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SnippetManager — Tu gestor de código",
-  description: "Guarda, organiza y busca tus snippets de código favoritos con resaltado de sintaxis.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  title: {
+    default: 'SnippetManager — Tu gestor de código',
+    template: '%s · SnippetManager',
+  },
+  description: 'Guarda, organiza y busca tus snippets de código favoritos con resaltado de sintaxis.',
+  openGraph: {
+    type: 'website',
+    siteName: 'SnippetManager',
+    title: 'SnippetManager — Tu gestor de código',
+    description: 'Guarda, organiza y busca tus snippets de código favoritos con resaltado de sintaxis.',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'SnippetManager — Tu gestor de código',
+    description: 'Guarda, organiza y busca tus snippets de código favoritos con resaltado de sintaxis.',
+  },
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({
@@ -43,9 +59,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <Navbar />
-        <div className="border-b border-border/40">
-          <Breadcrumbs />
-        </div>
+        <Breadcrumbs />
         <main className="flex-1">
           {children}
         </main>

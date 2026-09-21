@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { updateSnippet } from '@/app/actions'
 import { configureMonaco } from '@/lib/monaco'
+import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, isSupportedLanguage, type SupportedLanguage } from '@/lib/languages'
 
 const formSchema = z.object({
   title: z.string().min(3, { message: 'El título debe tener al menos 3 caracteres' }),
@@ -32,7 +33,7 @@ const formSchema = z.object({
   tags: z.string().optional(),
   notes: z.string().optional(),
   code: z.string().min(1, { message: 'El código no puede estar vacío' }),
-  language: z.string({ required_error: 'Selecciona un lenguaje' }),
+  language: z.enum(SUPPORTED_LANGUAGES, { message: 'Selecciona un lenguaje' }),
 })
 
 interface SnippetData {
@@ -62,7 +63,7 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
       tags: initialTags,
       notes: snippet.notes || '',
       code: snippet.code,
-      language: snippet.language,
+      language: isSupportedLanguage(snippet.language) ? snippet.language : 'typescript',
     },
   })
 
@@ -152,12 +153,13 @@ export function EditSnippetForm({ snippet }: { snippet: SnippetData }) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="typescript">TypeScript</SelectItem>
-                      <SelectItem value="javascript">JavaScript</SelectItem>
-                      <SelectItem value="python">Python</SelectItem>
-                      <SelectItem value="css">CSS</SelectItem>
-                      <SelectItem value="html">HTML</SelectItem>
-                      <SelectItem value="sql">SQL</SelectItem>
+                      {(Object.entries(LANGUAGE_LABELS) as [SupportedLanguage, string][]).map(
+                        ([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -1,5 +1,6 @@
 // lib/shiki.ts
 import { createHighlighter, type Highlighter } from 'shiki'
+import { SUPPORTED_LANGUAGES } from '@/lib/languages'
 
 let highlighter: Highlighter | null = null
 
@@ -7,7 +8,7 @@ export async function getHighlighter() {
     if (!highlighter) {
         highlighter = await createHighlighter({
             themes: ['github-dark', 'github-light', 'dracula', 'one-dark-pro'],
-            langs: ['javascript', 'typescript', 'python', 'css', 'html', 'sql', 'json', 'bash', 'rust', 'go'],
+            langs: [...SUPPORTED_LANGUAGES],
         })
     }
     return highlighter

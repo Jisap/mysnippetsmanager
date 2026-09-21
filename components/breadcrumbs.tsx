@@ -13,8 +13,14 @@ function humanizeSegment(segment: string): string {
   return SEGMENT_LABELS[segment] ?? decodeURIComponent(segment).replace(/-/g, ' ')
 }
 
+const HIDDEN_ROUTES = new Set(['/', '/login', '/register'])
+
 export function Breadcrumbs() {
   const pathname = usePathname()
+
+  // Sin migas en landing y auth: no aportan y añaden ruido visual
+  if (HIDDEN_ROUTES.has(pathname)) return null
+
   const segments = pathname.split('/').filter(Boolean)
 
   if (segments.length === 0) return null
@@ -33,8 +39,9 @@ export function Breadcrumbs() {
   })
 
   return (
+    <div className="border-b border-border/40">
     <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-muted-foreground px-6 py-2 max-w-6xl mx-auto">
-      <Link href="/" className="flex items-center gap-1 hover:text-foreground transition-colors">
+      <Link href="/" aria-label="Inicio" className="flex items-center gap-1 hover:text-foreground transition-colors">
         <Home className="w-3.5 h-3.5" />
       </Link>
       {crumbs.map(({ href, label, isLast }) => (
@@ -52,5 +59,6 @@ export function Breadcrumbs() {
         </span>
       ))}
     </nav>
+    </div>
   )
 }

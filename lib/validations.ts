@@ -1,17 +1,7 @@
 import * as z from 'zod'
+import { SUPPORTED_LANGUAGES, isSupportedLanguage } from '@/lib/languages'
 
-export const SUPPORTED_LANGUAGES = [
-  'typescript',
-  'javascript',
-  'python',
-  'css',
-  'html',
-  'sql',
-  'json',
-  'bash',
-  'rust',
-  'go',
-] as const
+export { SUPPORTED_LANGUAGES } from '@/lib/languages'
 
 export const snippetSchema = z.object({
   title: z.string().trim().min(3, { message: 'El título debe tener al menos 3 caracteres' }).max(200),
@@ -41,7 +31,7 @@ export const MAX_IMPORT_ITEMS = 500
 
 export function normalizeLanguage(lang: string): string | null {
   const normalized = lang.trim().toLowerCase()
-  return (SUPPORTED_LANGUAGES as readonly string[]).includes(normalized) ? normalized : null
+  return isSupportedLanguage(normalized) ? normalized : null
 }
 
 export function slugify(text: string): string {

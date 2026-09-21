@@ -44,6 +44,14 @@ export function BackupDialog() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Límite 5MB para evitar colgar el navegador con backups gigantes
+    if (file.size > 5 * 1024 * 1024) {
+      setSelectedFile(null)
+      setParsedData(null)
+      setImportResult({ error: 'El archivo supera el límite de 5MB.' })
+      return
+    }
+
     setSelectedFile(file)
     setImportResult(null)
 
