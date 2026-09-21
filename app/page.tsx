@@ -21,7 +21,9 @@ export default async function Home() {
     prisma.snippet.count({
       where: { userId: user.id },
     }),
-    prisma.tag.count(),
+    prisma.tag.count({
+      where: { snippets: { some: { userId: user.id } } },
+    }),
     prisma.snippet.count({
       where: {
         userId: user.id,

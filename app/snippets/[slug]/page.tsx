@@ -1,7 +1,8 @@
 // app/snippets/[slug]/page.tsx
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { highlightCode } from '@/lib/shiki'
+import { createClient } from '@/lib/supabase/server'
 import { SnippetDetailView } from '@/components/snippet-detail-view'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,8 +22,15 @@ export default async function SnippetDetailPage({ params }: Props) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
 
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
   const snippet = await prisma.snippet.findFirst({
     where: {
+      userId: user.id,
       OR: [
         { slug: slug },
         { slug: decodedSlug },
