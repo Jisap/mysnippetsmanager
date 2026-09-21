@@ -84,7 +84,7 @@ export function SnippetCard({
 
             {/* Acciones Rápidas */}
             <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-              <QuickCopyButton code={snippet.code} />
+              <QuickCopyButton snippetId={snippet.id} />
               <FavoriteButton
                 snippetId={snippet.id}
                 initialIsFavorite={Boolean(snippet.isFavorite)}

@@ -300,6 +300,27 @@ export async function duplicateSnippet(id: string) {
   }
 }
 
+export async function getSnippetCodeAction(id: string) {
+  try {
+    const { user, error: authError } = await requireUser()
+    if (!user) return { success: false, error: authError }
+    if (!id || typeof id !== 'string') return { success: false, error: 'ID inválido' }
+
+    const snippet = await prisma.snippet.findUnique({
+      where: { id },
+      select: { id: true, code: true, userId: true },
+    })
+    if (!snippet) return { success: false, error: 'Snippet no encontrado' }
+    if (snippet.userId !== user.id) {
+      return { success: false, error: 'No tienes permiso para ver este snippet' }
+    }
+    return { success: true, code: snippet.code }
+  } catch (error) {
+    console.error('Error fetching snippet code:', error)
+    return { success: false, error: 'No se pudo obtener el código' }
+  }
+}
+
 export async function getHighlightedCodeAction(code: string, lang: string, theme: string = 'github-dark') {
   if (typeof code !== 'string' || code.length === 0 || code.length > 100_000) {
     throw new Error('Código inválido')

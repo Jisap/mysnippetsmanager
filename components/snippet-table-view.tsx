@@ -21,6 +21,8 @@ interface SnippetTableViewProps {
   snippets: any[]
   onTagClick?: (tag: string) => void
   onFavoriteToggle?: (id: string, isFav: boolean) => void
+  initialSort?: SortField
+  initialOrder?: SortOrder
 }
 
 type SortField = 'title' | 'language' | 'createdAt' | 'lines'
@@ -30,9 +32,16 @@ export function SnippetTableView({
   snippets,
   onTagClick,
   onFavoriteToggle,
+  initialSort = 'createdAt',
+  initialOrder = 'desc',
 }: SnippetTableViewProps) {
-  const [sortField, setSortField] = useState<SortField>('createdAt')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [sortField, setSortField] = useState<SortField>(initialSort)
+  const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder)
+
+  const getLineCount = (s: any): number => {
+    if (typeof s.lineCount === 'number') return s.lineCount
+    return (s.code || '').split('\n').length
+  }
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -53,8 +62,8 @@ export function SnippetTableView({
       } else if (sortField === 'createdAt') {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       } else if (sortField === 'lines') {
-        const linesA = (a.code || '').split('\n').length
-        const linesB = (b.code || '').split('\n').length
+        const linesA = getLineCount(a)
+        const linesB = getLineCount(b)
         comparison = linesA - linesB
       }
       return sortOrder === 'asc' ? comparison : -comparison
@@ -140,7 +149,7 @@ export function SnippetTableView({
           </thead>
           <tbody className="divide-y divide-border/50 text-sm">
             {sortedSnippets.map((snippet, index) => {
-              const lineCount = (snippet.code || '').split('\n').length
+              const lineCount = getLineCount(snippet)
               return (
                 <motion.tr
                   key={snippet.id}
@@ -224,7 +233,7 @@ export function SnippetTableView({
                   {/* Acciones */}
                   <td className="py-3 px-4 align-middle text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1">
-                      <QuickCopyButton code={snippet.code} />
+                      <QuickCopyButton snippetId={snippet.id} />
                       <Link
                         href={`/snippets/${snippet.slug}`}
                         title="Ver detalle"
