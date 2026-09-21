@@ -25,6 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { createSnippet } from '@/app/actions'
 import { configureMonaco } from '@/lib/monaco'
 import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/lib/languages'
+import { CollectionPicker } from '@/components/collection-picker'
 
 const formSchema = z.object({
   title: z.string().min(3, { message: "El título debe tener al menos 3 caracteres" }),
@@ -33,6 +34,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
   code: z.string().min(1, { message: "El código no puede estar vacío" }),
   language: z.enum(SUPPORTED_LANGUAGES, { message: "Selecciona un lenguaje" }),
+  collectionIds: z.array(z.string().uuid()).optional(),
 })
 
 export function AddSnippetForm() {
@@ -48,6 +50,7 @@ export function AddSnippetForm() {
       notes: '',
       code: '',
       language: 'typescript',
+      collectionIds: [],
     },
   })
 
@@ -70,6 +73,7 @@ export function AddSnippetForm() {
         notes: '',
         code: '',
         language: values.language,
+        collectionIds: [],
       })
       setTimeout(() => setStatus('idle'), 3000)
     } else {
@@ -254,6 +258,20 @@ export function AddSnippetForm() {
                     className="w-full p-3.5 rounded-xl bg-background border border-input focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none text-sm font-mono leading-relaxed placeholder:text-muted-foreground/60 transition-all resize-y"
                     {...field}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="collectionIds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-base">Colecciones</FormLabel>
+                <FormControl>
+                  <CollectionPicker value={field.value ?? []} onChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

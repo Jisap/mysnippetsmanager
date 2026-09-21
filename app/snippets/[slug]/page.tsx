@@ -11,6 +11,7 @@ import { FavoriteButton } from '@/components/favorite-button'
 import { DuplicateSnippetButton } from '@/components/duplicate-snippet-button'
 import { ShareSnippetButton } from '@/components/share-snippet-button'
 import { ExportSnippetDialog } from '@/components/export-snippet-dialog'
+import { CollectionAssigner } from '@/components/collection-assigner'
 import Link from 'next/link'
 import { Pencil, Tag, Calendar } from 'lucide-react'
 
@@ -57,10 +58,17 @@ export default async function SnippetDetailPage({ params }: Props) {
     },
     include: {
       tags: true,
+      collections: { select: { id: true } },
     },
   })
 
   if (!snippet) notFound()
+
+  const allCollections = await prisma.collection.findMany({
+    where: { userId: user.id },
+    select: { id: true, name: true, _count: { select: { snippets: true } } },
+    orderBy: { name: 'asc' },
+  })
 
   // Resaltado inicial en el servidor para carga instantánea
   const initialHtml = await highlightCode(snippet.code, snippet.language, 'github-dark')
@@ -128,6 +136,19 @@ export default async function SnippetDetailPage({ params }: Props) {
         language={snippet.language}
         notes={snippet.notes}
       />
+
+      {/* Colecciones del snippet */}
+      <div className="mt-6 max-w-2xl">
+        <CollectionAssigner
+          snippetId={snippet.id}
+          allCollections={allCollections.map((c) => ({
+            id: c.id,
+            name: c.name,
+            count: c._count.snippets,
+          }))}
+          assignedIds={snippet.collections.map((c) => c.id)}
+        />
+      </div>
 
       <div className="mt-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border/40 pt-4">
         <span className="flex items-center gap-1.5">

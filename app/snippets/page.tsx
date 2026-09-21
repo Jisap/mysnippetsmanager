@@ -15,6 +15,7 @@ interface SearchParams {
   lang?: string
   tag?: string
   fav?: string
+  collection?: string
   page?: string
   sort?: string
   order?: string
@@ -38,6 +39,7 @@ export default async function SnippetsPage({ searchParams }: Props) {
   const langParam = (sp.lang || 'all').trim().slice(0, 30)
   const tagParam = (sp.tag || '').trim().toLowerCase().slice(0, 30) || null
   const onlyFavorites = sp.fav === '1'
+  const collectionParam = (sp.collection || '').trim().slice(0, 40) || null
   const page = Math.max(1, parseInt(sp.page || '1', 10) || 1)
   const sortField = ['createdAt', 'title', 'language'].includes(sp.sort || '')
     ? (sp.sort as 'createdAt' | 'title' | 'language')
@@ -49,6 +51,14 @@ export default async function SnippetsPage({ searchParams }: Props) {
   if (onlyFavorites) where.isFavorite = true
   if (langParam !== 'all') where.language = { equals: langParam, mode: 'insensitive' }
   if (tagParam) where.tags = { some: { name: tagParam } }
+  // La colección debe ser propia; si no, el filtro no coincide con nada
+  if (collectionParam) {
+    const ownedCollection = await prisma.collection.findFirst({
+      where: { id: collectionParam, userId: user.id },
+      select: { id: true },
+    })
+    where.collections = { some: { id: ownedCollection ? ownedCollection.id : '__none__' } }
+  }
   if (query) {
     where.AND = [
       {
@@ -70,7 +80,7 @@ export default async function SnippetsPage({ searchParams }: Props) {
         ? { language: sortOrder }
         : { createdAt: sortOrder }
 
-  const [totalCount, totalUserCount, favoritesCount, rawItems, langRows, tagRows] = await Promise.all([
+  const [totalCount, totalUserCount, favoritesCount, rawItems, langRows, tagRows, collectionRows] = await Promise.all([
     prisma.snippet.count({ where }),
     prisma.snippet.count({ where: { userId: user.id } }),
     prisma.snippet.count({ where: { userId: user.id, isFavorite: true } }),
@@ -106,6 +116,16 @@ export default async function SnippetsPage({ searchParams }: Props) {
       },
       take: 100,
     }),
+    prisma.collection.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        name: true,
+        snippets: { where: { userId: user.id }, select: { id: true } },
+      },
+      orderBy: { name: 'asc' },
+      take: 100,
+    }),
   ])
 
   // Payload ligero al cliente: sin `code`, con `lineCount` precalculado
@@ -122,6 +142,12 @@ export default async function SnippetsPage({ searchParams }: Props) {
     .map((t) => ({ name: t.name, count: t.snippets.length }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 8)
+
+  const collections = collectionRows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    count: c.snippets.length,
+  }))
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -152,11 +178,13 @@ export default async function SnippetsPage({ searchParams }: Props) {
           favoritesCount={favoritesCount}
           availableLanguages={availableLanguages}
           topTags={topTags}
+          collections={collections}
           page={safePage}
           totalPages={totalPages}
           initialQuery={query}
           initialLanguage={langParam}
           initialTag={tagParam}
+          initialCollection={collectionParam}
           initialOnlyFavorites={onlyFavorites}
           initialSort={sortField}
           initialOrder={sortOrder}

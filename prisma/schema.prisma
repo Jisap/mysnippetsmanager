@@ -23,6 +23,7 @@ model Snippet {
     updatedAt   DateTime @updatedAt
 
     tags Tag[]
+    collections Collection[]
 
     @@index([slug])
     @@index([isFavorite])
@@ -35,4 +36,17 @@ model Tag {
     snippets Snippet[]
 
     @@index([name])
+}
+
+model Collection {
+    id        String    @id @default(uuid())
+    name      String
+    userId    String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    snippets Snippet[]
+
+    @@unique([userId, name])
+    @@index([userId])
 }

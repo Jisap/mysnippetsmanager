@@ -27,6 +27,7 @@ export default async function EditSnippetPage({ params }: Props) {
     },
     include: {
       tags: true,
+      collections: { select: { id: true } },
     },
   })
 

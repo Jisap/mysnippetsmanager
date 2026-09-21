@@ -12,6 +12,7 @@ export const snippetSchema = z.object({
   language: z.enum(SUPPORTED_LANGUAGES),
   tags: z.string().max(200, { message: 'Demasiadas etiquetas' }).optional().or(z.literal('')),
   notes: z.string().max(50_000, { message: 'Las notas superan el límite permitido' }).optional().or(z.literal('')),
+  collectionIds: z.array(z.string().uuid()).max(20).optional(),
 })
 
 export type SnippetInput = z.infer<typeof snippetSchema>

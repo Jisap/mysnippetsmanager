@@ -48,6 +48,15 @@ export async function createSnippet(data: unknown) {
 
     const uniqueTags = parseTags(input.tags)
 
+    // Solo colecciones propias; IDs ajenos se ignoran
+    const ownedCollections =
+      input.collectionIds && input.collectionIds.length > 0
+        ? await prisma.collection.findMany({
+            where: { id: { in: input.collectionIds.slice(0, 20) }, userId: user.id },
+            select: { id: true },
+          })
+        : []
+
     const snippet = await prisma.snippet.create({
       data: {
         title: input.title,
@@ -66,6 +75,9 @@ export async function createSnippet(data: unknown) {
                 })),
               },
             }
+          : {}),
+        ...(ownedCollections.length > 0
+          ? { collections: { connect: ownedCollections.map((c) => ({ id: c.id })) } }
           : {}),
       },
     })
@@ -113,6 +125,13 @@ export async function updateSnippet(id: string, data: unknown) {
 
     const uniqueTags = parseTags(input.tags)
 
+    const ownedCollections = input.collectionIds
+      ? await prisma.collection.findMany({
+          where: { id: { in: input.collectionIds.slice(0, 20) }, userId: user.id },
+          select: { id: true },
+        })
+      : null
+
     const updated = await prisma.snippet.update({
       where: { id },
       data: {
@@ -129,6 +148,9 @@ export async function updateSnippet(id: string, data: unknown) {
             create: { name },
           })),
         },
+        ...(ownedCollections
+          ? { collections: { set: ownedCollections.map((c) => ({ id: c.id })) } }
+          : {}),
       },
     })
 
@@ -445,5 +467,138 @@ export async function importSnippetsAction(items: unknown) {
   } catch (error) {
     console.error('Error importing snippets:', error)
     return { success: false, error: 'Error durante la importación de snippets' }
+  }
+}
+
+// ---------- Colecciones ----------
+
+function validateCollectionName(name: unknown): string | null {
+  if (typeof name !== 'string') return null
+  const clean = name.trim().replace(/\s+/g, ' ').slice(0, 60)
+  return clean.length >= 2 ? clean : null
+}
+
+export async function getCollectionsAction() {
+  const { user, error: authError } = await requireUser()
+  if (!user) return { success: false, error: authError, collections: [] }
+
+  const collections = await prisma.collection.findMany({
+    where: { userId: user.id },
+    select: { id: true, name: true, _count: { select: { snippets: true } } },
+    orderBy: { name: 'asc' },
+  })
+  return {
+    success: true,
+    collections: collections.map((c) => ({ id: c.id, name: c.name, count: c._count.snippets })),
+  }
+}
+
+export async function createCollection(name: unknown) {
+  try {
+    const { user, error: authError } = await requireUser()
+    if (!user) return { success: false, error: authError }
+
+    const clean = validateCollectionName(name)
+    if (!clean) return { success: false, error: 'Nombre inválido (2-60 caracteres)' }
+
+    const collection = await prisma.collection.create({
+      data: { name: clean, userId: user.id },
+    })
+
+    revalidatePath('/snippets')
+    return { success: true, collection: { id: collection.id, name: collection.name } }
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return { success: false, error: 'Ya tienes una colección con ese nombre' }
+    }
+    console.error('Error creating collection:', error)
+    return { success: false, error: 'No se pudo crear la colección' }
+  }
+}
+
+export async function renameCollection(id: string, name: unknown) {
+  try {
+    const { user, error: authError } = await requireUser()
+    if (!user) return { success: false, error: authError }
+    if (!id || typeof id !== 'string') return { success: false, error: 'ID inválido' }
+
+    const clean = validateCollectionName(name)
+    if (!clean) return { success: false, error: 'Nombre inválido (2-60 caracteres)' }
+
+    const existing = await prisma.collection.findUnique({ where: { id } })
+    if (!existing) return { success: false, error: 'Colección no encontrada' }
+    if (existing.userId !== user.id) {
+      return { success: false, error: 'No tienes permiso para editar esta colección' }
+    }
+
+    await prisma.collection.update({ where: { id }, data: { name: clean } })
+
+    revalidatePath('/snippets')
+    return { success: true }
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return { success: false, error: 'Ya tienes una colección con ese nombre' }
+    }
+    console.error('Error renaming collection:', error)
+    return { success: false, error: 'No se pudo renombrar la colección' }
+  }
+}
+
+export async function deleteCollection(id: string) {
+  try {
+    const { user, error: authError } = await requireUser()
+    if (!user) return { success: false, error: authError }
+    if (!id || typeof id !== 'string') return { success: false, error: 'ID inválido' }
+
+    const existing = await prisma.collection.findUnique({ where: { id } })
+    if (!existing) return { success: false, error: 'Colección no encontrada' }
+    if (existing.userId !== user.id) {
+      return { success: false, error: 'No tienes permiso para eliminar esta colección' }
+    }
+
+    // Solo borra la colección; los snippets se conservan
+    await prisma.collection.delete({ where: { id } })
+
+    revalidatePath('/snippets')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting collection:', error)
+    return { success: false, error: 'No se pudo eliminar la colección' }
+  }
+}
+
+export async function setSnippetCollections(snippetId: string, collectionIds: string[]) {
+  try {
+    const { user, error: authError } = await requireUser()
+    if (!user) return { success: false, error: authError }
+    if (!snippetId || typeof snippetId !== 'string') return { success: false, error: 'ID inválido' }
+    if (!Array.isArray(collectionIds)) return { success: false, error: 'Colecciones inválidas' }
+
+    const snippet = await prisma.snippet.findUnique({
+      where: { id: snippetId },
+      select: { id: true, userId: true, slug: true },
+    })
+    if (!snippet) return { success: false, error: 'Snippet no encontrado' }
+    if (snippet.userId !== user.id) {
+      return { success: false, error: 'No tienes permiso para modificar este snippet' }
+    }
+
+    // Solo colecciones propias (ignora IDs ajenos o inexistentes)
+    const owned = await prisma.collection.findMany({
+      where: { id: { in: collectionIds.slice(0, 20) }, userId: user.id },
+      select: { id: true },
+    })
+
+    await prisma.snippet.update({
+      where: { id: snippetId },
+      data: { collections: { set: owned.map((c) => ({ id: c.id })) } },
+    })
+
+    revalidatePath('/snippets')
+    revalidatePath(`/snippets/${snippet.slug}`)
+    return { success: true }
+  } catch (error) {
+    console.error('Error setting snippet collections:', error)
+    return { success: false, error: 'No se pudieron guardar las colecciones' }
   }
 }
