@@ -8,24 +8,46 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { UserNav } from '@/components/auth/user-nav'
 
+/**
+ * Navbar principal de la aplicación.
+ *
+ * Combina dos responsabilidades independientes:
+ * 1. Tema claro/oscuro persistido en localStorage.
+ * 2. Sincronización del estado de autenticación en el cliente,
+ *    usando el SDK de Supabase (no depende de las cookies del servidor).
+ *
+ * La sesión mostrada aquí puede tardar un instante en reflejar cambios
+ * hechos en el servidor (p. ej. tras un login por Server Action), porque
+ * se basa en el listener `onAuthStateChange` del navegador, no en cookies
+ * leídas server-side.
+ */
 export function Navbar() {
   const pathname = usePathname()
   const [isDark, setIsDark] = useState(true)
+
+  // Evita el "flash" de contenido incorrecto: hasta que el componente no
+  // esté montado en el cliente no sabemos el tema real (depende de
+  // localStorage/matchMedia, que no existen en el render del servidor).
   const [mounted, setMounted] = useState(false)
+
   const [user, setUser] = useState<{ email?: string; id?: string } | null>(null)
 
+  // --- Tema ---
   useEffect(() => {
     setMounted(true)
     const savedTheme = localStorage.getItem('theme')
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    // Prioridad: preferencia guardada por el usuario > preferencia del sistema operativo.
     const dark = savedTheme ? savedTheme === 'dark' : prefersDark
     setIsDark(dark)
     document.documentElement.classList.toggle('dark', dark)
   }, [])
 
+  // --- Autenticación ---
   useEffect(() => {
     const supabase = createClient()
 
+    // Estado inicial: se pide el usuario actual al montar (o al cambiar de ruta).
     const syncUser = async () => {
       const { data } = await supabase.auth.getUser()
       setUser(data.user ? { email: data.user.email, id: data.user.id } : null)
@@ -33,22 +55,29 @@ export function Navbar() {
 
     syncUser()
 
+    // Fuente de verdad reactiva: cualquier login/logout/refresh de token
+    // dispara este listener automáticamente, sin necesidad de polling.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ? { email: session.user.email, id: session.user.id } : null)
     })
 
+    // Refuerzo manual: `onAuthStateChange` no siempre se dispara al instante
+    // cuando el cambio de sesión lo origina OTRO componente (p. ej. el logout
+    // en UserNav). Este evento custom permite forzar una resincronización
+    // inmediata sin esperar la propagación del listener de Supabase.
     const handleAuthEvent = () => {
       syncUser()
     }
-
     window.addEventListener('auth-state-change', handleAuthEvent)
 
     return () => {
       subscription.unsubscribe()
       window.removeEventListener('auth-state-change', handleAuthEvent)
     }
+    // Se re-suscribe en cada cambio de ruta para evitar listeners obsoletos
+    // en navegaciones largas dentro de la SPA.
   }, [pathname])
 
   const toggleTheme = () => {
@@ -76,23 +105,26 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Nav Links */}
+        {/* Enlaces de navegación */}
         <nav className="flex items-center gap-1">
           {navLinks.map(({ href, label, icon: Icon }) => {
+            // '/snippets' se considera activo también en sub-rutas (p. ej. /snippets/123)
             const isActive = pathname === href || (href === '/snippets' && pathname.startsWith('/snippets'))
             return (
               <Link
                 key={href}
                 href={href}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  isActive
-                    ? 'text-foreground bg-muted'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                }`}
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive
+                  ? 'text-foreground bg-muted'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  }`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{label}</span>
                 {isActive && (
+                  // layoutId comparte la animación entre los distintos links:
+                  // el fondo "se desliza" de un link activo a otro en vez de
+                  // aparecer/desaparecer de golpe.
                   <motion.span
                     layoutId="navbar-active-pill"
                     className="absolute inset-0 rounded-lg bg-muted -z-10"
@@ -104,8 +136,10 @@ export function Navbar() {
           })}
         </nav>
 
-        {/* Acciones derechas: Theme toggle + UserNav */}
+        {/* Acciones: tema + navegación de usuario */}
         <div className="flex items-center gap-2">
+          {/* Se renderiza solo cuando `mounted` es true para no mostrar un
+              icono de tema incorrecto antes de leer localStorage. */}
           {mounted && (
             <button
               onClick={toggleTheme}

@@ -17,26 +17,58 @@ interface UserNavProps {
   } | null
 }
 
+/**
+ * Menú de usuario en la Navbar.
+ *
+ * Muestra botones de login/registro si no hay sesión, o un menú desplegable
+ * con el email del usuario y la opción de cerrar sesión si la hay.
+ *
+ * El `user` llega como prop desde `Navbar`, que es quien mantiene el estado
+ * de sesión sincronizado con Supabase (ver navbar.tsx). Este componente no
+ * lee la sesión por sí mismo, solo la muestra y dispara el logout.
+ */
 export function UserNav({ user }: UserNavProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
+  /**
+   * Cierra la sesión en las dos capas donde vive el estado de autenticación:
+   *
+   * 1. Cliente (SDK de Supabase en el navegador, vía localStorage/memoria).
+   * 2. Servidor (cookies HTTP que lee el middleware en cada request).
+   *
+   * Si solo se limpiara una de las dos, quedarían inconsistentes: por
+   * ejemplo, el cliente diría "deslogueado" pero un Server Component
+   * seguiría viendo cookies válidas hasta que expiraran.
+   */
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
+      // 1) Cierra sesión del lado del cliente.
       const supabase = createClient()
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Error signing out on client:', e)
     }
+
+    // 2) Avisa a Navbar para que resincronice su estado de inmediato, sin
+    //    esperar a que se propague el listener onAuthStateChange.
     window.dispatchEvent(new Event('auth-state-change'))
+
+    // 3) Limpia las cookies de sesión del lado del servidor (Server Action).
     await logoutAction()
+
+    // 4) Fuerza el re-render de los Server Components con las cookies ya
+    //    actualizadas, para que cualquier dato server-side dependiente del
+    //    usuario quede coherente con el nuevo estado "sin sesión".
     router.refresh()
+
     setIsOpen(false)
     setIsLoggingOut(false)
   }
 
+  // --- Usuario no autenticado: botones de login/registro ---
   if (!user) {
     return (
       <div className="flex items-center gap-2">
@@ -60,6 +92,8 @@ export function UserNav({ user }: UserNavProps) {
     )
   }
 
+  // Avatar simplificado: primera letra del email en mayúscula.
+  // 'U' como fallback por si el objeto user llegara sin email.
   const initial = user.email ? user.email.charAt(0).toUpperCase() : 'U'
 
   return (
@@ -81,6 +115,8 @@ export function UserNav({ user }: UserNavProps) {
       <AnimatePresence>
         {isOpen && (
           <>
+            {/* Capa invisible a pantalla completa: cerrar el menú al hacer
+                clic en cualquier punto fuera de él (patrón "click outside"). */}
             <div
               className="fixed inset-0 z-40"
               onClick={() => setIsOpen(false)}

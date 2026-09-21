@@ -23,13 +23,13 @@ export default function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      const res = await loginAction({ email, password })
-      if (res.success) {
-        window.dispatchEvent(new Event('auth-state-change'))
-        router.refresh()
-        router.push('/snippets')
+      const res = await loginAction({ email, password })       // El formulario establece el estado de email y pass -> loginAction -> establece cookies -> signInWithPassword -> se devuelve true
+      if (res.success) {                                       // Si res.success es true
+        window.dispatchEvent(new Event('auth-state-change'))   // Se emite un evento global para notificar a otros componentes del cambio de estado de autenticación
+        router.refresh()                                       // Se refresca la página para que se reflejen los cambios de cookies
+        router.push('/snippets')                               // Se redirige al usuario a la página de snippets
       } else {
-        setErrorMessage(res.error || 'Credenciales inválidas')
+        setErrorMessage(res.error || 'Credenciales inválidas') // Si res.success es false, se muestra el error
       }
     } catch (err: any) {
       setErrorMessage(err?.message || 'Error al iniciar sesión')

@@ -33,7 +33,11 @@ export async function loginAction(formData: { email: string; password: string })
     await claimLegacySnippets(data.user.id)
   }
 
+  // revalidatePath fuerza a Next.js a volver a ejecutar las rutas afectadas
+  // la 'layout' indica que debe invalidar la caché de todas las rutas que comparten el layout
   revalidatePath('/', 'layout')
+
+  // La respuesta vuelve al cliente como true
   return { success: true }
 }
 
